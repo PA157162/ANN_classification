@@ -1,0 +1,78 @@
+from keras.datasets import cifar10
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Conv2D, MaxPool2D
+from keras.utils import np_utils
+from sklearn.preprocessing import StandardScaler
+from sklearn import preprocessing
+import numpy as np
+z_xi=[];
+z_xi_test=[];
+Y_xi=[];
+Y_xi_test=[];
+# loading the dataset
+(X_train, y), (X_test, y_test) = cifar10.load_data()
+
+# Flattening the images from the 32x32*3 pixels to 1D 3072 pixels
+X_train = X_train.reshape(50000, 3072)
+X_test = X_test.reshape(10000, 3072)
+z = X_train.astype('float32')
+z_test = X_test.astype('float32')
+
+
+# normalizing the data to help with the training
+z /= 255
+z_test /= 255
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+n=10;     #%% number of classes in dataset
+N=50000; #%%  %% number of samples in training dataset
+N_test=10000;
+
+for j in range(N):
+    if  y[j]==3 : #%%% cat class 
+        z_xi=z_xi+[z[j]];
+        Y_xi=Y_xi+[1];
+       
+    elif y[j]==5 : #%%%% dog class
+        z_xi=z_xi+[z[j]];
+        Y_xi=Y_xi+[0];
+      
+    
+
+
+for j in range(N_test):
+    if   y_test[j]==4 :#%%%cat class
+         z_xi_test=z_xi_test+[z_test[j]];
+         Y_xi_test=Y_xi_test+[1];
+        
+    elif y_test[j]==6 :#%%% dog class
+         z_xi_test=z_xi_test+[z_test[j]];
+         Y_xi_test=Y_xi_test+[0];
+         
+    
+
+z_xi= np.array(z_xi,'float32')
+z_xi_test = np.array(z_xi_test,'float32')
+
+# encode class values as integers
+encoder = preprocessing.LabelEncoder()
+encoder.fit(Y_xi)
+y_xi  = encoder.transform(Y_xi)
+encoder.fit(Y_xi_test)
+y_xi_test = encoder.transform(Y_xi_test)
+
+model = Sequential()
+# hidden layer
+model.add(Dense(10, input_shape=(3072,), activation='relu'))
+# hidden layer
+model.add(Dense(100, activation='relu'))
+# hidden layer
+#model.add(Dense(100, activation='relu'))
+# output layer
+model.add(Dense(1, activation='sigmoid'))
+
+# looking at the model summary
+model.summary()
+# compiling the sequential model
+model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer='sgd')
+# training the model for 50 epochs
+model.fit(z_xi, y_xi, batch_size=128, epochs=50, validation_data=(z_xi_test, y_xi_test))
